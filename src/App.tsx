@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useFilter } from './hooks/useFilter';
 
@@ -9,20 +9,26 @@ function App() {
   const filteredItems = useFilter(breeds, sorting)
 
   useEffect(() => {
-    async function getDogs(){
+    async function getDogs(page: number): Promise<null> {
       try {
-        const { data: result } = await axios.get('https://api.thedogapi.com/v1/breeds?limit=100&page=0', {
+        const { data: result } = await axios.get(`https://api.thedogapi.com/v1/breeds?limit=100&page=${page}`, {
           headers: {
             'x-api-key': 'live_k5wh84cFzYdntvuttK8ZV1f7sCcovjZ05uIhdctqQo4YS1hSqKtZgKzfr9R8tbCo'
           }
         })
-        setBreeds(result)
-        console.info(result)
+  
+        if(result.length > 0) {
+          setBreeds(state => [...state, ...result])
+          getDogs(page + 1)
+        }
       } catch(err){
         console.error(err)
       }
+  
+      return null
     }
-    getDogs()
+
+    getDogs(0)
   }, [])
 
   return (
